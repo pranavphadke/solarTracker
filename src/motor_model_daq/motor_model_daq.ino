@@ -8,9 +8,9 @@ volatile long count=0;
 volatile unsigned long lastMillis=0;
 volatile bool chA,chB;
 volatile bool dr;
-int updTime=20;
+int updTime=10;
 float rpm=0.0;
-volatile float panRead=0.0;
+
 void setup(){
   pinMode(pwm,OUTPUT);
   pinMode(dir,OUTPUT);
@@ -24,8 +24,8 @@ void setup(){
 
 void loop(){
   digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
-  analogWrite(pwm,HIGH);
-  Serial.print(-getRPM(64,updTime,1)/18.75);Serial.print(";");Serial.println(!dr);
+  analogWrite(pwm,255);
+  Serial.print(millis());Serial.print(",");Serial.println(-getRPM(64,updTime,1)/18.75);
   delay(20);  
 }
 
