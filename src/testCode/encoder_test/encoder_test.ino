@@ -9,8 +9,7 @@
 //int pan_op;
 volatile long count=0;
 volatile unsigned long lastMillis=0;
-volatile bool chA,chB;
-volatile bool dr;
+volatile bool chA,chB,chAP,chBP,dr;
 int updTime=400;
 float rpm=0.0;
 volatile float panRead=0.0;
@@ -25,23 +24,33 @@ void setup(){
   pinMode(pan,INPUT);
   Serial.begin(9600);
   attachInterrupt(0,pulseCount,CHANGE);
-//  attachInterrupt(1,pulseCount,CHANGE)
+  attachInterrupt(1,pulseCount,CHANGE);
 }
 
 void loop(){
-//int pwm_value=0;
-  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
-//  analogWrite(pwm,100);
-  getPanOp(pan);
-  //Serial.println(pan_op);
-  //delay(100);
-  analogWrite(pwm,panRead);
-//for(pwm_value=0;pwm_value<256;pwm_value++){
-//analogWrite(pwm,pwm_value); //increase PWM in every 0.1 sec
-//delay(100);
+
+//int pwm_value=-255;
+//for(pwm_value=-255;pwm_value<256;pwm_value++){
+//  if(pwm_value<0){
+//    digitalWrite(dir,LOW);
+//  }else{
+//    digitalWrite(dir,HIGH);
+//  }
+//  analogWrite(pwm,abs(pwm_value)); //increase PWM in every 0.1 sec
+//  Serial.print("RPM:");Serial.print(getRPM(64,updTime));Serial.print(" ;Direction:");Serial.println(dr);
+//  delay(100);
 //}
-  Serial.print("RPM:");Serial.print(-getRPM(64,updTime,1)/18.75);Serial.print(" ;Direction:");Serial.println(!dr);
-  delay(100);  
+
+  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
+
+//  analogWrite(pwm,100);
+
+  getPanOp(pan);
+  analogWrite(pwm,panRead);
+
+  Serial.print("RPM:");Serial.print(getRPM(64,updTime));Serial.print(" ;Direction:");Serial.println(dr);
+  delay(100);
+    
 }
 
 void pulseCount(){
@@ -50,14 +59,57 @@ void pulseCount(){
 //  else decrement count (tick) (anti-clockwise rot)
   chA=digitalRead(chanA);
   chB=digitalRead(chanB);
-  if (chA!=chB){
-    count++;
-    dr=HIGH;
-  }else{
-    count--;
-    dr=LOW;
+//  if (chA!=chB){
+//    count++;
+//    dr=HIGH;
+//  }else{
+//    count--;
+//    dr=LOW;
+//  }
+  if(chA==HIGH && chB==HIGH){
+    if(chAP==HIGH && chBP==LOW){
+      count++;
+      dr=HIGH;
+    }
+    if(chAP==LOW && chBP==HIGH){
+      count--;
+      dr=LOW;
+    }
   }
+  if(chA==HIGH && chB==LOW){
+    if(chAP==HIGH && chBP==HIGH ){
+      count--;
+      dr=LOW;
+    }
+    if(chAP==LOW && chBP==LOW){
+      count++;
+      dr=HIGH;
+    }
+  }
+  if(chA==LOW && chB==LOW){
+    if(chAP==HIGH && chBP==LOW){
+      count--;
+      dr=LOW;
+    }
+    if(chAP==LOW && chBP==HIGH){
+      count++;
+      dr=HIGH;
+    }
+  }  
+  if(chA==LOW && chB==HIGH){
+    if(chAP==HIGH && chBP==HIGH){
+      count++;
+      dr=HIGH;
+    }
+    if(chAP==LOW && chBP==LOW){
+      count--;
+      dr=LOW;
+    }
+  }
+chAP=chA;
+chBP=chB;
 }
+
 void getPanOp(int panPort){
 // panPort= Analog port on which panel is connected
   panRead = 0.0;               //get average five consecutive analog readings from A1 pin (pot)
@@ -65,14 +117,15 @@ void getPanOp(int panPort){
     panRead += analogRead(panPort);
   panRead*=(0.2493/5);        //convert from 10 bit to 8 bit, 0.2493 = 255/1023 5v/1023=0.004887
 }
-float getRPM(int CPR,int updateTime, int senseActive){
+
+float getRPM(int CPR,int updateTime){
 // CPR = Counts per revolution of the motor shaft
 // updateTime = Time interval in milli seconds for calculating RPM 
 // senseActive = Number of hall sensor channels in use
   if(millis()-lastMillis >= updTime){
     noInterrupts();
     lastMillis=millis();
-    rpm=float(2*60000*count/(CPR*senseActive*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
+    rpm=float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
     count=0;
     interrupts();
   }

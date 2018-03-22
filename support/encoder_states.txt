@@ -1,0 +1,9 @@
+chA==HIGH && chB==HIGH  s1
+chA==HIGH && chB==LOW	s2
+chA==LOW && chB==LOW	s3
+chA==LOW && chB==HIGH	s4
+
+chAP==HIGH && chBP==HIGH  	s1
+chAP==HIGH && chBP==LOW		s2
+chAP==LOW && chBP==LOW		s3
+chAP==LOW && chBP==HIGH		s4
