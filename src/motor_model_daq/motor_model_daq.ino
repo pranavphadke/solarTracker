@@ -8,7 +8,7 @@ volatile long count=0;
 volatile unsigned long lastMillis=0;
 volatile bool chA,chB;
 volatile bool dr;
-int updTime=10;
+int updTime=400;
 float rpm=0.0;
 
 void setup(){
@@ -24,9 +24,9 @@ void setup(){
 
 void loop(){
   digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
-  analogWrite(pwm,255);
+  analogWrite(pwm,100);
   Serial.print(millis());Serial.print(",");Serial.println(-getRPM(64,updTime,1)/18.75);
-  delay(20);  
+  delay(100);  
 }
 
 void pulseCount(){
