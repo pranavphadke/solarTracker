@@ -9,7 +9,9 @@
 
 //int pan_op;
 const int CPR=64;
-volatile unsigned long int count=0;
+//volatile unsigned long int count=0;
+volatile unsigned long int countA=0;
+volatile unsigned long int countB=0;
 volatile unsigned long int lastMilli=0;
 volatile unsigned long int milli=0;
 volatile bool chA,chB,chAP,chBP;
@@ -48,14 +50,16 @@ void loop(){
 //  delay(100);
 //}
 
-  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
+//  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
 
 //  analogWrite(pwm,100);
 
-  getPanOp(pan);
-  analogWrite(pwm,panRead);
+//  getPanOp(pan);
+//  analogWrite(pwm,panRead);
+//
+//  Serial.print("RPM:");Serial.print(getRPM());Serial.print(" ;Direction:");Serial.println(dr);
 
-  Serial.print("RPM:");Serial.print(getRPM());Serial.print(" ;Direction:");Serial.println(dr);
+  Serial.print("Channel A:");Serial.print(countA);Serial.print(" ||| Channel B:");Serial.println(countB);
   delay(100);
     
 }
@@ -122,14 +126,24 @@ void loop(){
 //  
 //}
 
+//void pulseCountA(){
+//  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
+//  else count--;  
+//}
+//
+//void pulseCountB(){
+//  if(bitRead(PORTD,2)!=bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
+//  else count--;  
+//}
+
 void pulseCountA(){
-  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
-  else count--;  
+  if(bitRead(PORTD,2)==bitRead(PORTD,3)) countA++;// Read and compare digital port 2 and 3
+  else countA--;  
 }
 
 void pulseCountB(){
-  if(bitRead(PORTD,2)!=bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
-  else count--;  
+  if(bitRead(PORTD,2)!=bitRead(PORTD,3)) countB++;// Read and compare digital port 2 and 3
+  else countB--;  
 }
 
 void getPanOp(int panPort){
