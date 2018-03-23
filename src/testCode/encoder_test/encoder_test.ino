@@ -67,10 +67,10 @@ void loop(){
   
   digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
 
-  analogWrite(pwm,255);
+//  analogWrite(pwm,255);
 
-//  getPanOp(pan);
-//  analogWrite(pwm,panRead);
+  getPanOp(pan);
+  analogWrite(pwm,panRead);
   
 //  getRPM();
 
@@ -79,7 +79,7 @@ void loop(){
 //  Serial.print("Channel A:");Serial.print(countA);Serial.print(" ||| Channel B:");Serial.println(countB);
 
 //  Serial.print("Count:");Serial.println(count);
-  delay(20);
+  delay(100);
     
 }
 
