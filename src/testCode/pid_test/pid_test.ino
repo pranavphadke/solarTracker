@@ -5,11 +5,11 @@
 #define pwm 4
 #define dir 5
 #define pan A1
-
+int CPR=64;
 volatile long count=0;
-volatile unsigned long lastMillis=0;
+volatile unsigned long lastMilli=0,milli=0;
 volatile bool chA=LOW,chB=LOW,chAP=LOW,chBP=LOW,dr;
-int updTime=400;
+int updateTime=400;
 float rpm=0.0;
 volatile float panRead=0.0;
 void setup(){
@@ -46,7 +46,7 @@ void loop(){
   getPanOp(pan);
   analogWrite(pwm,panRead);
 
-  Serial.print("RPM:");Serial.print(getRPM(64,updTime,millis()));Serial.print(" ;Direction:");Serial.println(dr);
+  Serial.print("RPM:");Serial.print(getRPM());Serial.print(" ;Direction:");Serial.println(dr);
   delay(100);
     
 }
@@ -109,13 +109,14 @@ void getPanOp(int panPort){
   panRead*=(0.2493/5);        //convert from 10 bit to 8 bit, 0.2493 = 255/1023 5v/1023=0.004887
 }
 
-float getRPM(int CPR,int updateTime,long int milli){
+float getRPM(){
 // CPR = Counts per revolution of the motor shaft
 // updateTime = Time interval in milli seconds for calculating RPM 
 // senseActive = Number of hall sensor channels in use
+  milli=millis();
   noInterrupts();
-  if(milli-lastMillis >= updateTime){
-    lastMillis=milli;
+  if(milli-lastMilli >= updateTime){
+    lastMilli=milli;
     rpm=float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
     count=0;
     if (rpm<0) dr=LOW;
