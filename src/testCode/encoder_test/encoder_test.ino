@@ -114,7 +114,7 @@ void pulseCount(){
 //chAP=chA;
 //chBP=chB;
 
-  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;
+  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
   else count--;
   
 }
