@@ -6,7 +6,8 @@
 #define dir 5
 #define pan A1
 
-const int CPR=64;
+//const int CPR=64;
+int comm=0;
 volatile long int count=0;
 volatile long int countA=0;
 volatile long int countB=0;
@@ -28,7 +29,7 @@ void setup(){
   digitalWrite(chanB,LOW);
   pinMode(pan,INPUT);
   Serial.begin(9600);
-
+  digitalWrite(dir,HIGH);
   // Attach interrupt on encoder channels
   attachInterrupt(0,pulseCountA,CHANGE);
   attachInterrupt(1,pulseCountB,CHANGE);
@@ -68,8 +69,12 @@ ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR
 }
 
 void loop(){
-  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
-  analogWrite(pwm,100);
-  Serial.print(milli);Serial.print(",");Serial.println(rpm/18.75);
-  delay(20);  
+//  if(Serial.available() > 0)comm=Serial.parseInt();
+//  analogWrite(pwm,0);
+//  while(comm==1){
+    analogWrite(pwm,255);
+    Serial.print(milli);Serial.print(",");Serial.println(rpm);
+    delay(20);
+//    if(Serial.available() > 0)comm=Serial.parseInt();
+//  }  
 }
