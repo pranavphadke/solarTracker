@@ -9,18 +9,19 @@
 
 //int pan_op;
 const int CPR=64;
-//volatile unsigned long int count=0;
+volatile long int count=0;
 volatile long int countA=0;
 volatile long int countB=0;
 volatile unsigned long int lastMilli=0;
 volatile unsigned long int milli=0;
 volatile bool chA,chB,chAP,chBP;
 volatile int dr=1;
-volatile int updateTime=400;
+volatile int updateTime=20;
 volatile float rpm=0.0;
 volatile float panRead=0.0;
 
 void setup(){
+  noInterrupts();
   pinMode(pwm,OUTPUT);
   pinMode(dir,OUTPUT);
   pinMode(chanA,INPUT);
@@ -32,8 +33,22 @@ void setup(){
 //  attachInterrupt(0,pulseCount,CHANGE);
 //  attachInterrupt(1,pulseCount,CHANGE);
 
+  // Attach interrupt on encoder channels
   attachInterrupt(0,pulseCountA,CHANGE);
   attachInterrupt(1,pulseCountB,CHANGE);
+  
+  // Attached timer interrupt to calculate RPM
+  TCCR1A=0;// RESET REGISTER
+  TCCR1B=0;
+  TCNT1=0;
+  
+  OCR1A=250*updateTime;//12500;// COMPARE MATCH REGISTER SET FOR MEGA RUNNING AT 16MHZ WITH PRESCALER 64 COUNTING FOR 20HZ
+  TCCR1B |= (1 << CS11);// SET PRESCALER TO 64
+  TCCR1B |= (1 << CS10);// SET PRESCALER TO 64
+  TCCR1B |= (1 << WGM12);// CTC MODE
+  TIMSK1 |= (1 << OCIE1A);// ENABLE TIMER 1 COMPARE A INTERRUPT
+  
+  interrupts();
 }
 
 void loop(){
@@ -49,18 +64,22 @@ void loop(){
 //  Serial.print("RPM:");Serial.print(getRPM(64,updTime));Serial.print(" ;Direction:");Serial.println(dr);
 //  delay(100);
 //}
+  
+  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
 
-//  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
-
-//  analogWrite(pwm,100);
+  analogWrite(pwm,255);
 
 //  getPanOp(pan);
 //  analogWrite(pwm,panRead);
-//
-//  Serial.print("RPM:");Serial.print(getRPM());Serial.print(" ;Direction:");Serial.println(dr);
+  
+//  getRPM();
 
-  Serial.print("Channel A:");Serial.print(countA);Serial.print(" ||| Channel B:");Serial.println(countB);
-  delay(100);
+  Serial.print("RPM:");Serial.print(rpm);Serial.print(" ;Direction:");Serial.println(dr);
+
+//  Serial.print("Channel A:");Serial.print(countA);Serial.print(" ||| Channel B:");Serial.println(countB);
+
+//  Serial.print("Count:");Serial.println(count);
+  delay(20);
     
 }
 
@@ -139,15 +158,15 @@ void loop(){
 void pulseCountA(){
   chA=digitalRead(chanA);
   chB=digitalRead(chanB);  
-  if(chA==chB) countA++;// Read and compare digital port 2 and 3
-  else countA--;  
+  if(chA==chB) count++;// Read and compare digital port 2 and 3
+  else count--;  
 }
 
 void pulseCountB(){
   chA=digitalRead(chanA);
   chB=digitalRead(chanB);
-  if(chB!=chA) countB++;// Read and compare digital port 2 and 3
-  else countB--;
+  if(chB!=chA) count++;// Read and compare digital port 2 and 3
+  else count--;
 }
 
 void getPanOp(int panPort){
@@ -158,19 +177,26 @@ void getPanOp(int panPort){
   panRead*=0.04986;//(0.2493/5);        //convert from 10 bit to 8 bit, 0.2493 = 255/1023 5v/1023=0.004887
 }
 
-//void getRPM(){
-//// CPR = Counts per revolution of the motor shaft
-//// updateTime = Time interval in milli seconds for calculating RPM 
-//// senseActive = Number of hall sensor channels in use
+ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR  
+//void getRPM()
+// CPR = Counts per revolution of the motor shaft
+// updateTime = Time interval in milli seconds for calculating RPM 
+// senseActive = Number of hall sensor channels in use
 //  noInterrupts();
+  
 //  milli=millis();
 //  if(milli-lastMilli >= updateTime){
 //    lastMilli=milli;
 //    rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
 //    count=0;
 //  }
-//  if(rpm<0) dr=-1; 
-//  else dr=1;
-//  rpm=abs(rpm);
+
+  rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
+  count=0;
+  
+  if(rpm<0) dr=-1; 
+  else dr=1;
+  rpm=abs(rpm);
+  
 //  interrupts();
-//}
+}
