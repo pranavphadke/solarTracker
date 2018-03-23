@@ -1,4 +1,4 @@
-// #define diy_pwm A2
+
 #define chanA 2
 #define chanAInt 0
 #define chanB 3
@@ -6,13 +6,18 @@
 #define pwm 4
 #define dir 5
 #define pan A1
+
 //int pan_op;
-volatile long count=0;
-volatile unsigned long lastMillis=0;
-volatile bool chA,chB,chAP,chBP,dr;
-int updTime=400;
-float rpm=0.0;
+const int CPR=64;
+volatile unsigned long int count=0;
+volatile unsigned long int lastMilli=0;
+volatile unsigned long int milli=0;
+volatile bool chA,chB,chAP,chBP;
+volatile int dr=1;
+volatile int updateTime=400;
+volatile float rpm=0.0;
 volatile float panRead=0.0;
+
 void setup(){
   pinMode(pwm,OUTPUT);
   pinMode(dir,OUTPUT);
@@ -20,11 +25,10 @@ void setup(){
   digitalWrite(chanA,LOW);
   pinMode(chanB,INPUT);
   digitalWrite(chanB,LOW);
-  //pinMode(diy_pwm,OUTPUT);
   pinMode(pan,INPUT);
   Serial.begin(9600);
   attachInterrupt(0,pulseCount,CHANGE);
-  attachInterrupt(1,pulseCount,CHANGE);
+//  attachInterrupt(1,pulseCount,CHANGE);
 }
 
 void loop(){
@@ -48,7 +52,7 @@ void loop(){
   getPanOp(pan);
   analogWrite(pwm,panRead);
 
-  Serial.print("RPM:");Serial.print(getRPM(64,updTime));Serial.print(" ;Direction:");Serial.println(dr);
+  Serial.print("RPM:");Serial.print(getRPM());Serial.print(" ;Direction:");Serial.println(dr);
   delay(100);
     
 }
@@ -57,8 +61,8 @@ void pulseCount(){
 //  change count (tick) when Hall sensor channel A o/p changes 
 //  increment count (tick) (clockwise rot) when channel B o/p is not similar to channel A
 //  else decrement count (tick) (anti-clockwise rot)
-  chA=digitalRead(chanA);
-  chB=digitalRead(chanB);
+//  chA=digitalRead(chanA);
+//  chB=digitalRead(chanB);
 //  if (chA!=chB){
 //    count++;
 //    dr=HIGH;
@@ -66,48 +70,53 @@ void pulseCount(){
 //    count--;
 //    dr=LOW;
 //  }
-  if(chA==HIGH && chB==HIGH){
-    if(chAP==HIGH && chBP==LOW){
-      count++;
-      dr=HIGH;
-    }
-    if(chAP==LOW && chBP==HIGH){
-      count--;
-      dr=LOW;
-    }
-  }
-  if(chA==HIGH && chB==LOW){
-    if(chAP==HIGH && chBP==HIGH ){
-      count--;
-      dr=LOW;
-    }
-    if(chAP==LOW && chBP==LOW){
-      count++;
-      dr=HIGH;
-    }
-  }
-  if(chA==LOW && chB==LOW){
-    if(chAP==HIGH && chBP==LOW){
-      count--;
-      dr=LOW;
-    }
-    if(chAP==LOW && chBP==HIGH){
-      count++;
-      dr=HIGH;
-    }
-  }  
-  if(chA==LOW && chB==HIGH){
-    if(chAP==HIGH && chBP==HIGH){
-      count++;
-      dr=HIGH;
-    }
-    if(chAP==LOW && chBP==LOW){
-      count--;
-      dr=LOW;
-    }
-  }
-chAP=chA;
-chBP=chB;
+
+//  if(chA==HIGH && chB==HIGH){
+//    if(chAP==HIGH && chBP==LOW){
+//      count++;
+//      dr=HIGH;
+//    }
+//    if(chAP==LOW && chBP==HIGH){
+//      count--;
+//      dr=LOW;
+//    }
+//  }
+//  if(chA==HIGH && chB==LOW){
+//    if(chAP==HIGH && chBP==HIGH ){
+//      count--;
+//      dr=LOW;
+//    }
+//    if(chAP==LOW && chBP==LOW){
+//      count++;
+//      dr=HIGH;
+//    }
+//  }
+//  if(chA==LOW && chB==LOW){
+//    if(chAP==HIGH && chBP==LOW){
+//      count--;
+//      dr=LOW;
+//    }
+//    if(chAP==LOW && chBP==HIGH){
+//      count++;
+//      dr=HIGH;
+//    }
+//  }  
+//  if(chA==LOW && chB==HIGH){
+//    if(chAP==HIGH && chBP==HIGH){
+//      count++;
+//      dr=HIGH;
+//    }
+//    if(chAP==LOW && chBP==LOW){
+//      count--;
+//      dr=LOW;
+//    }
+//  }
+//chAP=chA;
+//chBP=chB;
+
+  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;
+  else count--;
+  
 }
 
 void getPanOp(int panPort){
@@ -115,19 +124,22 @@ void getPanOp(int panPort){
   panRead = 0.0;               //get average five consecutive analog readings from A1 pin (pot)
   for(int i =0;i<5;i++)
     panRead += analogRead(panPort);
-  panRead*=(0.2493/5);        //convert from 10 bit to 8 bit, 0.2493 = 255/1023 5v/1023=0.004887
+  panRead*=0.04986;//(0.2493/5);        //convert from 10 bit to 8 bit, 0.2493 = 255/1023 5v/1023=0.004887
 }
 
-float getRPM(int CPR,int updateTime){
+void getRPM(){
 // CPR = Counts per revolution of the motor shaft
 // updateTime = Time interval in milli seconds for calculating RPM 
 // senseActive = Number of hall sensor channels in use
-  if(millis()-lastMillis >= updTime){
-    noInterrupts();
-    lastMillis=millis();
-    rpm=float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
+  noInterrupts();
+  milli=millis();
+  if(milli-lastMilli >= updateTime){
+    lastMilli=milli;
+    rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
     count=0;
-    interrupts();
   }
-  return rpm;
+  if(rpm<0) dr=-1; 
+  else dr=1;
+  rpm=abs(rpm);
+  interrupts();
 }
