@@ -27,8 +27,11 @@ void setup(){
   digitalWrite(chanB,LOW);
   pinMode(pan,INPUT);
   Serial.begin(9600);
-  attachInterrupt(0,pulseCount,CHANGE);
+//  attachInterrupt(0,pulseCount,CHANGE);
 //  attachInterrupt(1,pulseCount,CHANGE);
+
+  attachInterrupt(0,pulseCountA,CHANGE);
+  attachInterrupt(1,pulseCountB,CHANGE);
 }
 
 void loop(){
@@ -57,66 +60,76 @@ void loop(){
     
 }
 
-void pulseCount(){
-//  change count (tick) when Hall sensor channel A o/p changes 
-//  increment count (tick) (clockwise rot) when channel B o/p is not similar to channel A
-//  else decrement count (tick) (anti-clockwise rot)
-//  chA=digitalRead(chanA);
-//  chB=digitalRead(chanB);
-//  if (chA!=chB){
-//    count++;
-//    dr=HIGH;
-//  }else{
-//    count--;
-//    dr=LOW;
-//  }
+//void pulseCount(){
+////  change count (tick) when Hall sensor channel A o/p changes 
+////  increment count (tick) (clockwise rot) when channel B o/p is not similar to channel A
+////  else decrement count (tick) (anti-clockwise rot)
+////  chA=digitalRead(chanA);
+////  chB=digitalRead(chanB);
+////  if (chA!=chB){
+////    count++;
+////    dr=HIGH;
+////  }else{
+////    count--;
+////    dr=LOW;
+////  }
+//
+////  if(chA==HIGH && chB==HIGH){
+////    if(chAP==HIGH && chBP==LOW){
+////      count++;
+////      dr=HIGH;
+////    }
+////    if(chAP==LOW && chBP==HIGH){
+////      count--;
+////      dr=LOW;
+////    }
+////  }
+////  if(chA==HIGH && chB==LOW){
+////    if(chAP==HIGH && chBP==HIGH ){
+////      count--;
+////      dr=LOW;
+////    }
+////    if(chAP==LOW && chBP==LOW){
+////      count++;
+////      dr=HIGH;
+////    }
+////  }
+////  if(chA==LOW && chB==LOW){
+////    if(chAP==HIGH && chBP==LOW){
+////      count--;
+////      dr=LOW;
+////    }
+////    if(chAP==LOW && chBP==HIGH){
+////      count++;
+////      dr=HIGH;
+////    }
+////  }  
+////  if(chA==LOW && chB==HIGH){
+////    if(chAP==HIGH && chBP==HIGH){
+////      count++;
+////      dr=HIGH;
+////    }
+////    if(chAP==LOW && chBP==LOW){
+////      count--;
+////      dr=LOW;
+////    }
+////  }
+////chAP=chA;
+////chBP=chB;
+//
+//  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
+//  else count--;
+//  
+//}
 
-//  if(chA==HIGH && chB==HIGH){
-//    if(chAP==HIGH && chBP==LOW){
-//      count++;
-//      dr=HIGH;
-//    }
-//    if(chAP==LOW && chBP==HIGH){
-//      count--;
-//      dr=LOW;
-//    }
-//  }
-//  if(chA==HIGH && chB==LOW){
-//    if(chAP==HIGH && chBP==HIGH ){
-//      count--;
-//      dr=LOW;
-//    }
-//    if(chAP==LOW && chBP==LOW){
-//      count++;
-//      dr=HIGH;
-//    }
-//  }
-//  if(chA==LOW && chB==LOW){
-//    if(chAP==HIGH && chBP==LOW){
-//      count--;
-//      dr=LOW;
-//    }
-//    if(chAP==LOW && chBP==HIGH){
-//      count++;
-//      dr=HIGH;
-//    }
-//  }  
-//  if(chA==LOW && chB==HIGH){
-//    if(chAP==HIGH && chBP==HIGH){
-//      count++;
-//      dr=HIGH;
-//    }
-//    if(chAP==LOW && chBP==LOW){
-//      count--;
-//      dr=LOW;
-//    }
-//  }
-//chAP=chA;
-//chBP=chB;
-
+void pulseCountA(){
   if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
-  else count--;
-  
+  else count--;  
+}
+
+void pulseCountB(){
+  if(bitRead(PORTD,2)!=bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
+  else count--;  
 }
 
 void getPanOp(int panPort){
