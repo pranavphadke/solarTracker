@@ -18,6 +18,8 @@ volatile int dr=1;
 volatile int updateTime=20;
 volatile float rpm=0.0;
 volatile float panRead=0.0;
+volatile float moAng=0.0;
+volatile float shAng=0.0;
 
 double Kpspd=20;
 double Kispd=100;
@@ -27,6 +29,9 @@ volatile float err=0;
 volatile float errDer=0;
 volatile float errInt=0;
 volatile float cntr=0;
+
+float ref=0;
+float pwmVal=0;
 
 void setup(){
   noInterrupts();
@@ -59,13 +64,26 @@ void setup(){
 
 void loop(){
   
-  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
-
-  getPanOp(pan);
-  analogWrite(pwm,panRead);
-
-  Serial.print("RPM:");Serial.print(rpm);Serial.print(" ;Direction:");Serial.println(dr);
+//  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
+//
+//  getPanOp(pan);
+//  analogWrite(pwm,panRead);
+  
+  if(time>10000){
+    ref=90;
+  }else{
+    ref=-90;
+  }
+  pwmVal=abs(PID(1.34,0,0.123,ref,shAng));
+  digitalWrite(dir,dr*255);
+  analogWrite(pwm,pwmVal);
+  time+=millis();
+  if(time>20000) time=0;
+  Serial.print("Angle:");Serial.print(shAng);Serial.print(" ;Direction:");Serial.println(dr);
   delay(100);
+
+//  Serial.print("RPM:");Serial.print(rpm);Serial.print(" ;Direction:");Serial.println(dr);
+//  delay(100);
     
 }
 
@@ -93,17 +111,21 @@ void getPanOp(int panPort){
 
 ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR  
   rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
+  moAng+=(5.625*count);
+  shAng+=(0.3*count);  
   count=0;
-  if(rpm<0) dr=-1; 
-  else dr=1;
+//  if(rpm<0) dr=-1; 
+//  else dr=1;
   rpm=abs(rpm);
 }
 
-float PID(double P,double I,double D,int stage, int ref, int act){
-  err=ref-act;
+float PID(double P,double I,double D, int refer, int actual){
+  err=refer-actual;
   errDer=err-errPast;
   errInt+=err;
   cntr=constrain(((P*err)+(I*errInt)+(D*errDer)),-255,255);
+  if(cntr<0) dr=-1; 
+  else dr=1;  
   errPast=err;
   return cntr;
 }
