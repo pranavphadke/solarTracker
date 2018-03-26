@@ -1,4 +1,6 @@
 clear
+clf
+close all
 clc
 'Pausing...'
 pause(5)
@@ -12,11 +14,14 @@ formatS='%d,%f';
 dataOutSize=[1 2];
 c=0;
 'Capture...'
-while c<50
+while true
     c=c+1;
     %dataIn=fgets(ardu);
     dataOut(c,:)=fscanf(ardu,formatS,dataOutSize);
     dataOut(c,1)=dataOut(c,1)/1000;
+    if dataOut(c,2)==0 && c>20
+        break;
+    end
 end
 % fprintf(ardu,'%s','0');% stop running
 fclose(ardu);

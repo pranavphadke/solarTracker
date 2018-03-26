@@ -72,8 +72,13 @@ void loop(){
 //  if(Serial.available() > 0)comm=Serial.parseInt();
 //  analogWrite(pwm,0);
 //  while(comm==1){
-    analogWrite(pwm,255);
-    Serial.print(milli);Serial.print(",");Serial.println(rpm);
+    if (milli<5000){
+      analogWrite(pwm,100);
+    }else if (milli>=5000 && milli<10000){
+      analogWrite(pwm,255);
+    }else analogWrite(pwm,0);
+    
+    Serial.print(milli);Serial.print(",");Serial.println(rpm/18.75);
     delay(20);
 //    if(Serial.available() > 0)comm=Serial.parseInt();
 //  }  
