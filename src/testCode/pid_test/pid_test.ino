@@ -21,9 +21,9 @@ volatile float panRead=0.0;
 volatile float moAng=0.0;
 volatile float shAng=0.0;
 
-double Kpspd=20;
-double Kispd=100;
-double Kdspd=0;
+double Kp=1.25;
+double Ki=0;
+double Kd=0.2;
 volatile float errPast=0;
 volatile float err=0;
 volatile float errDer=0;
@@ -68,19 +68,19 @@ void loop(){
 //
 //  getPanOp(pan);
 //  analogWrite(pwm,panRead);
-  
-  if(time>10000){
-    ref=90;
-  }else{
-    ref=-90;
-  }
-  pwmVal=abs(PID(1.34,0,0.123,ref,shAng));
-  digitalWrite(dir,dr*255);
+    ref=180;
+//  if(time>10000){
+//    ref=90;
+//  }else{
+//    ref=-90;
+//  }
+  pwmVal=abs(PID(Kp,Ki,Kd,ref,shAng));//1.34,0,0.123
+  digitalWrite(dir,dr);
   analogWrite(pwm,pwmVal);
-  time+=millis();
-  if(time>20000) time=0;
-  Serial.print("Angle:");Serial.print(shAng);Serial.print(" ;Direction:");Serial.println(dr);
-  delay(100);
+//  time+=millis();
+//  if(time>20000) time=0;
+//  Serial.print("Angle:");Serial.print(shAng);Serial.print(" ;Direction:");Serial.println(dr);
+//  delay(100);
 
 //  Serial.print("RPM:");Serial.print(rpm);Serial.print(" ;Direction:");Serial.println(dr);
 //  delay(100);
@@ -124,8 +124,8 @@ float PID(double P,double I,double D, int refer, int actual){
   errDer=err-errPast;
   errInt+=err;
   cntr=constrain(((P*err)+(I*errInt)+(D*errDer)),-255,255);
-  if(cntr<0) dr=-1; 
-  else dr=1;  
+  if(cntr<0) dr=LOW; 
+  else dr=HIGH;  
   errPast=err;
   return cntr;
 }

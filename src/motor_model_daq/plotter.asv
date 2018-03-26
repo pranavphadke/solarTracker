@@ -10,7 +10,7 @@ hold
 plot(simD(1,:),simD(2,:),'r')
 legend('Actual','Simulated')
 hold off
-G=tf(30.95,[1,11.9,0])
+G=tf(30.95,[1,11.9])
 % step(255*G)
 % hold off
 sisotool(G)
