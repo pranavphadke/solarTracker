@@ -8,7 +8,6 @@
 
 //int pan_op;
 
-//const int CPR=64;
 volatile long int count=0;
 volatile unsigned long int lastMilli=0;
 volatile unsigned long int milli=0;
