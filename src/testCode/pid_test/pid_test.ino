@@ -21,17 +21,18 @@ volatile float panRead=0.0;
 volatile float moAng=0.0;
 volatile float shAng=0.0;
 
-double Kp=1.25;
-double Ki=0;
+double Kp=1.0;
+double Ki=0.0;
 double Kd=0.2;
-volatile float errPast=0;
-volatile float err=0;
-volatile float errDer=0;
-volatile float errInt=0;
-volatile float cntr=0;
+volatile float errPast=0.0;
+volatile float err=0.0;
+volatile float errDer=0.0;
+volatile float errInt=0.0;
+volatile float cntr=0.0;
 
-float ref=0;
-float pwmVal=0;
+int ref=0;
+int pwmVal=0;
+int time=0;
 
 void setup(){
   noInterrupts();
@@ -68,23 +69,28 @@ void loop(){
 //
 //  getPanOp(pan);
 //  analogWrite(pwm,panRead);
-    ref=180;
-//  if(time>10000){
 //    ref=90;
-//  }else{
-//    ref=-90;
-//  }
+
+  if (time>=0 && time<250){
+    ref=0;
+  }else if (time>=250 && time<500){
+    ref=90;
+  }else if (time>=500 && time<750){ 
+    ref=-90;
+  }else time=0;
+  
   pwmVal=abs(PID(Kp,Ki,Kd,ref,shAng));//1.34,0,0.123
   digitalWrite(dir,dr);
   analogWrite(pwm,pwmVal);
-//  time+=millis();
+  time++;
 //  if(time>20000) time=0;
 //  Serial.print("Angle:");Serial.print(shAng);Serial.print(" ;Direction:");Serial.println(dr);
 //  delay(100);
 
 //  Serial.print("RPM:");Serial.print(rpm);Serial.print(" ;Direction:");Serial.println(dr);
 //  delay(100);
-    
+//Serial.println(ref);
+  delay(20);  
 }
 
 void pulseCountA(){
@@ -109,24 +115,28 @@ void getPanOp(int panPort){
   panRead*=0.04986;//(0.2493/5);        //convert from 10 bit to 8 bit, 0.2493 = 255/1023 5v/1023=0.004887
 }
 
-ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR  
+ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR
+//  noInterrupts();
   rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
   moAng+=(5.625*count);
-  shAng+=(0.3*count);  
+  shAng+=(0.3*count);
+//  interrupts();  
   count=0;
 //  if(rpm<0) dr=-1; 
 //  else dr=1;
   rpm=abs(rpm);
+  
 }
 
 float PID(double P,double I,double D, int refer, int actual){
   err=refer-actual;
   errDer=err-errPast;
   errInt+=err;
+  errInt=constrain(errInt,-180,180);
   cntr=constrain(((P*err)+(I*errInt)+(D*errDer)),-255,255);
   if(cntr<0) dr=LOW; 
   else dr=HIGH;  
   errPast=err;
-  return cntr;
+  return int(cntr);
 }
 
