@@ -1,4 +1,3 @@
-
 #define chanA 2
 #define chanAInt 0
 #define chanB 3
