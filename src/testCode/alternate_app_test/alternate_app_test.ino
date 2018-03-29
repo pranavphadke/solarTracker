@@ -6,13 +6,19 @@
 #define dir 5
 #define pan A1
 
-//int pan_op;
+volatile int panOpC=0;
+volatile int panOpP=0;
+volatile int delPanOpD1=0;
+volatile int delPanOpD2=0;
+volatile int drTry=0;
+volatile bool dr=HIGH;
+volatile bool drP=HIGH;
+
 
 volatile long int count=0;
 volatile unsigned long int lastMilli=0;
 volatile unsigned long int milli=0;
 volatile bool chA,chB,chAP,chBP;
-volatile bool dr=HIGH;
 volatile int updateTime=20;                                                     // Update time period for encoders in milli seconds
 volatile float rpm=0.0;
 volatile float panRead=0.0;
@@ -115,10 +121,46 @@ float PID(double P,double I,double D, int refer, int actual){
 
 void scan(){
   // Gets correction rotation direction and sets 'dr' variable
+  drPass=0;
+  drTry=0;
+  while (drPass==0){
+    drTry++;
+    digitalWrite(dir,LOW);
+    panOpP=getPanOp(pan);
+    analogWrite(pwm,50);
+    delay(100);
+    panOpC=getPanOp(pan);
+    delPanOpD1=panOpP-panOpC;
+    digitalWrite(dir,HIGH);
+    delay(200);
+    panOpC=getPanOp(pan)
+    delPanOpD2=panOpP-panOpC;
+    digitalWrite(dir,LOW);
+    delay(100);
+    analogWrite(pwm,0);
+    if (delPanOpD1<0){
+      dr=LOW;
+      drPass=1;
+    }else if (delPanOpD2<0){
+      dr=HIGH; 
+      drPass=1; 
+    }else {
+      drPass=0;
+      digitalWrite(dir,HIGH);                                               // Find process to randomize direction selection
+      analogWrite(pwm,100);
+      delay(100);
+      analogWrite(pwm,0);
+    }
+    if (drTry>5){
+      drPass=-1;                                                            // Find optimal way to allow system to sleep if no light source present
+    }
+  }
+  drP=dr;                                                                   // Store previous direction(Used in future additions)
 }
 
 void getRef(){
   // Gets new reference angle for system by using scanning direction and finding new maximum panel output
+  
 }
 
 void setRef(){
