@@ -6,14 +6,16 @@
 #define dir 5
 #define pan A1
 
-volatile int panOpC=0;
-volatile int panOpP=0;
-volatile int delPanOpD1=0;
-volatile int delPanOpD2=0;
+volatile float panOpC=0;
+volatile float panOpP=0;
+volatile float delPanOpD1=0;
+volatile float delPanOpD2=0;
 volatile int drTry=0;
+volatile int drPass=0;
+volatile int sI=0;
 volatile bool dr=HIGH;
 volatile bool drP=HIGH;
-
+const float tol=0.5; 
 
 volatile long int count=0;
 volatile unsigned long int lastMilli=0;
@@ -53,8 +55,8 @@ void setup(){
   attachInterrupt(0,pulseCountA,CHANGE);
   attachInterrupt(1,pulseCountB,CHANGE);
   
-  // Attached timer interrupt to calculate RPM
-  TCCR1A=0;// RESET REGISTER
+  // Attach timer1 interrupt to calculate RPM
+  TCCR1A=0;                                                                    // RESET REGISTERS
   TCCR1B=0;
   TCNT1=0;
   
@@ -64,6 +66,8 @@ void setup(){
   TCCR1B |= (1 << WGM12);                                                      // CTC MODE
   TIMSK1 |= (1 << OCIE1A);                                                     // ENABLE TIMER 1 COMPARE A INTERRUPT
   
+  // Attach timer interrupt to wake system
+  
   interrupts();
 }
 
@@ -72,8 +76,12 @@ void loop(){
   //  scan() then 
   //  getRef() then
   //  setRef()
+  while(sI==0){
+    scan();
+    Serial.print("Si:");Serial.print(sI);Serial.print(";dir:");Serial.println(dr);
+  }
   
-  delay(20);  
+  delay(500);  
 }
 
 void pulseCountA(){
@@ -90,12 +98,13 @@ void pulseCountB(){
   else count--;
 }
 
-void getPanOp(int panPort){
+float getPanOp(int panPort){
 // panPort = Analog port on which panel is connected
   panRead = 0.0;               
   for(int i =0;i<5;i++)
     panRead += analogRead(panPort);                                         //  get average five consecutive analog readings from A1 pin (pot)
-  panRead*=0.009774;                                                        //  convert from 10 bit to 10V -> 0.009774=10/1023
+  panRead*=0.009774/5;                                                        //  convert from 10 bit to 10V -> 0.009774=10/1023
+  return panRead;
 }
 
 ISR(TIMER1_COMPA_vect){                                                     // TIMER 1 COMPARE A ISR
@@ -104,7 +113,6 @@ ISR(TIMER1_COMPA_vect){                                                     // T
   shAng+=(0.3*count);
   count=0;
   rpm=abs(rpm);
-  
 }
 
 float PID(double P,double I,double D, int refer, int actual){
@@ -128,31 +136,44 @@ void scan(){
     digitalWrite(dir,LOW);
     panOpP=getPanOp(pan);
     analogWrite(pwm,50);
-    delay(100);
+    delay(1000);
+    analogWrite(pwm,0);
+    delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD1=panOpP-panOpC;
+//    Serial.print(delPanOpD1);
     digitalWrite(dir,HIGH);
-    delay(200);
-    panOpC=getPanOp(pan)
-    delPanOpD2=panOpP-panOpC;
-    digitalWrite(dir,LOW);
-    delay(100);
+    analogWrite(pwm,50);
+    delay(2000);
     analogWrite(pwm,0);
-    if (delPanOpD1<0){
+    delay(1000);
+    panOpC=getPanOp(pan);
+    delPanOpD2=panOpP-panOpC;
+//    Serial.print(" ");
+//    Serial.println(delPanOpD2);
+    digitalWrite(dir,LOW);
+    analogWrite(pwm,50);
+    delay(1000);
+    analogWrite(pwm,0);
+    if (delPanOpD1<-tol){
       dr=LOW;
       drPass=1;
-    }else if (delPanOpD2<0){
+      sI=1;
+    }else if (delPanOpD2<-tol){
       dr=HIGH; 
-      drPass=1; 
+      drPass=1;
+      sI=1; 
     }else {
       drPass=0;
       digitalWrite(dir,HIGH);                                               // Find process to randomize direction selection
-      analogWrite(pwm,100);
-      delay(100);
+      analogWrite(pwm,50);
+      delay(3000);
       analogWrite(pwm,0);
+      delay(1000);
     }
     if (drTry>5){
       drPass=-1;                                                            // Find optimal way to allow system to sleep if no light source present
+      sI=1;
     }
   }
   drP=dr;                                                                   // Store previous direction(Used in future additions)
