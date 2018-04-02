@@ -135,16 +135,16 @@ void scan(){
     drTry++;
     digitalWrite(dir,LOW);
     panOpP=getPanOp(pan);
-    analogWrite(pwm,50);
-    delay(1000);
+    analogWrite(pwm,100);
+    delay(500);
     analogWrite(pwm,0);
     delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD1=panOpP-panOpC;
 //    Serial.print(delPanOpD1);
     digitalWrite(dir,HIGH);
-    analogWrite(pwm,50);
-    delay(2000);
+    analogWrite(pwm,100);
+    delay(1000);
     analogWrite(pwm,0);
     delay(1000);
     panOpC=getPanOp(pan);
@@ -152,8 +152,8 @@ void scan(){
 //    Serial.print(" ");
 //    Serial.println(delPanOpD2);
     digitalWrite(dir,LOW);
-    analogWrite(pwm,50);
-    delay(1000);
+    analogWrite(pwm,100);
+    delay(500);
     analogWrite(pwm,0);
     if (delPanOpD1<-tol){
       dr=LOW;
@@ -166,10 +166,10 @@ void scan(){
     }else {
       drPass=0;
       digitalWrite(dir,HIGH);                                               // Find process to randomize direction selection
-      analogWrite(pwm,50);
-      delay(3000);
+      analogWrite(pwm,100);
+      delay(1500);
       analogWrite(pwm,0);
-      delay(1000);
+      delay(100);
     }
     if (drTry>5){
       drPass=-1;                                                            // Find optimal way to allow system to sleep if no light source present
