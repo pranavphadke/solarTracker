@@ -141,7 +141,7 @@ void scan(){
     delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD1=panOpP-panOpC;
-//    Serial.print(delPanOpD1);
+    Serial.print(delPanOpD1);
     digitalWrite(dir,HIGH);
     analogWrite(pwm,100);
     delay(1000);
@@ -149,8 +149,8 @@ void scan(){
     delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD2=panOpP-panOpC;
-//    Serial.print(" ");
-//    Serial.println(delPanOpD2);
+    Serial.print(" ");
+    Serial.println(delPanOpD2);
     digitalWrite(dir,LOW);
     analogWrite(pwm,100);
     delay(500);
@@ -171,7 +171,7 @@ void scan(){
       analogWrite(pwm,0);
       delay(100);
     }
-    if (drTry>5){
+    if (drTry>2){
       drPass=-1;                                                            // Find optimal way to allow system to sleep if no light source present
       sI=1;
     }
