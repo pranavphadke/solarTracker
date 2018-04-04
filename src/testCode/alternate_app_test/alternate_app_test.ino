@@ -26,7 +26,9 @@ volatile float rpm=0.0;
 volatile float panRead=0.0;
 volatile float moAng=0.0;
 volatile float shAng=0.0;
-volatile float probe[]={0,0,0,0,0};                                            // Index starts at 0
+volatile float paAng=0.0;
+volatile float probe[2][3]={{0,0,0},{0,0,0}};                                  // Index starts at 0
+volatile float probeDiff[2]={0,0};
 
 
 double Kp=1.0;
@@ -113,6 +115,7 @@ ISR(TIMER1_COMPA_vect){                                                     // T
   rpm=float(937.5*count/updateTime);                                        //  60000*count)/(CPR*updateTime)
   moAng+=(5.625*count);
   shAng+=(0.3*count);
+  paAng+=(0.01*count);
   count=0;
   rpm=abs(rpm);
 }
@@ -140,23 +143,27 @@ void scan(){
     analogWrite(pwm,100);
     delay(500);
     analogWrite(pwm,0);
-    delay(1000);
+    Serial.print(paAng);
+    Serial.print(" ");
+//    delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD1=panOpP-panOpC;
-    Serial.print(delPanOpD1);
+//    Serial.print(delPanOpD1);
     digitalWrite(dir,HIGH);
     analogWrite(pwm,100);
     delay(1000);
     analogWrite(pwm,0);
-    delay(1000);
+    Serial.print(paAng);
+//    delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD2=panOpP-panOpC;
     Serial.print(" ");
-    Serial.println(delPanOpD2);
+//    Serial.println(delPanOpD2);
     digitalWrite(dir,LOW);
     analogWrite(pwm,100);
     delay(500);
     analogWrite(pwm,0);
+    Serial.println(paAng);
     if (delPanOpD1<-tol){
       dr=LOW;
       drPass=1;
