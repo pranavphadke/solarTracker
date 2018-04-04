@@ -15,7 +15,7 @@ volatile int drPass=0;
 volatile int sI=0;
 volatile bool dr=HIGH;
 volatile bool drP=HIGH;
-const float tol=0.5; 
+const float tol=0.2; 
 
 volatile long int count=0;
 volatile unsigned long int lastMilli=0;
@@ -26,6 +26,8 @@ volatile float rpm=0.0;
 volatile float panRead=0.0;
 volatile float moAng=0.0;
 volatile float shAng=0.0;
+volatile float probe[]={0,0,0,0,0};                                            // Index starts at 0
+
 
 double Kp=1.0;
 double Ki=0.0;
@@ -181,6 +183,9 @@ void scan(){
 
 void getRef(){
   // Gets new reference angle for system by using scanning direction and finding new maximum panel output
+  // move through 5 step in direction identified
+  // find difference in past and current panel reading
+  // if difference changes to positive stop and go back one step
   
 }
 
