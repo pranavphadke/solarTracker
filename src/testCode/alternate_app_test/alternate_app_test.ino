@@ -37,15 +37,16 @@ volatile int refPass=0;
 volatile float refPast=0;
 
 
-double Kp=22.0;                                                               // 1.0
-double Ki=0.00015;                                                            // 0.0
-double Kd=0.3;                                                                // 0.2
+double Kp=10;                                                               // 1.0
+double Ki=0.0;                                                            // 0.0
+double Kd=5;                                                                // 0.2
 volatile float errPast=0.0;
 volatile float err=0.5;
 volatile float errDer=0.0;
 volatile float errInt=0.0;
 volatile float cntr=0.0;
 volatile float angTol=0.25;
+volatile int pidComp=0;
 
 int ref=0;
 int pwmVal=0;
@@ -89,9 +90,9 @@ void loop(){
   //  setRef()
 //  while(sI==0){
 //    scan();
-//    Serial.print("Si:");Serial.print(sI);Serial.print(";dir:");Serial.println(dr);
+////    Serial.print("Si:");Serial.print(sI);Serial.print(";dir:");Serial.println(dr);
 //  }
-  setRef(10,paAng);
+  setRef(10,&paAng);
   
   delay(500);  
 }
@@ -128,11 +129,15 @@ ISR(TIMER1_COMPA_vect){                                                     // T
   rpm=abs(rpm);
 }
 
-float PID(double P,double I,double D, int refer, int actual){
+float PID(double P,double I,double D, float refer, float actual){
+  Serial.print("Inside PID with err:");Serial.print(err);Serial.print(" and pidComp:");Serial.println(pidComp);
   err=refer-actual;
+  if (abs(err)<angTol & abs(errPast)<angTol){ 
+    pidComp=1;
+  }else pidComp=0;
   errDer=err-errPast;
   errInt+=err;
-  errInt=constrain(errInt,-180,180);
+  errInt=constrain(errInt,-100,100);
   cntr=constrain(((P*err)+(I*errInt)+(D*errDer)),-255,255);
   if(cntr<0) dr=LOW; 
   else dr=HIGH;  
@@ -148,35 +153,35 @@ void scan(){
     drTry++;
 //    digitalWrite(dir,LOW);
     panOpP=getPanOp(pan);
-    setRef(paAng-scanStep,paAng);
+    setRef(paAng-scanStep,&paAng);
 //    analogWrite(pwm,100);
-//    delay(500);
+//    delay(100);
 //    analogWrite(pwm,0);
-    Serial.print(paAng);
-    Serial.print(" ");
-//    delay(1000);
+//    Serial.print(paAng);
+//    Serial.print(" ");
+//    delay(100);
     panOpC=getPanOp(pan);
     delPanOpD1=panOpP-panOpC;
-    Serial.print(delPanOpD1);
-    Serial.print(" ");
-    setRef(paAng+2*scanStep,paAng);
+//    Serial.println(delPanOpD1);
+//    Serial.print(" ");
+    setRef(paAng+2*scanStep,&paAng);
 //    digitalWrite(dir,HIGH);
 //    analogWrite(pwm,100);
-//    delay(1000);
+//    delay(100);
 //    analogWrite(pwm,0);
-    Serial.print(paAng);
+//    Serial.print(paAng);
 //    delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD2=panOpP-panOpC;
-    Serial.print(" ");
-    Serial.print(delPanOpD2);
-    Serial.print(" ");
-    setRef(paAng-scanStep,paAng);
+//    Serial.print(" ");
+//    Serial.println(delPanOpD2);
+//    Serial.print(" ");
+    setRef(paAng-scanStep,&paAng);
 //    digitalWrite(dir,LOW);
 //    analogWrite(pwm,100);
-//    delay(500);
+//    delay(100);
 //    analogWrite(pwm,0);
-    Serial.println(paAng);
+//    Serial.println(paAng);
     if (delPanOpD1<-drTol){
       dr=LOW;
       mul=-1;
@@ -189,7 +194,7 @@ void scan(){
       sI=1; 
     }else {
       drPass=0;                                                             // Find process to randomize direction selection
-      setRef(paAng+3*scanStep,paAng);
+      setRef(paAng+3*scanStep,&paAng);
 //      digitalWrite(dir,HIGH);                                               
 //      analogWrite(pwm,100);
 //      delay(1500);
@@ -216,7 +221,7 @@ void getRef(){
       probe[0][i+1]=probe[0][i];
       probe[1][i+1]=probe[1][i];
     }
-    setRef(paAng+(mul*scanStep/2),paAng);
+    setRef(paAng+(mul*scanStep/2),&paAng);
     probe[0][0]=getPanOp(pan);
     probe[1][0]=paAng;
     probeDiff[0]=probe[1]-probe[0];
@@ -224,23 +229,25 @@ void getRef(){
     // if difference changes to positive stop and go back one step
     if (probeDiff[0]>0 & probeDiff[1]<0){
       refPass=1;// use sI=1
-      setRef(probe[1][1],paAng);
+      setRef(probe[1][1],&paAng);
     }else if (refTry>5){
       refPass=1;// use sI=1
-      setRef(refPast,paAng);
+      setRef(refPast,&paAng);
     }
     refTry+=1;
   }
   refPast=paAng;
 }
 
-void setRef(int angRef,float opAng){
+void setRef(float angRef,volatile float *opAngPt){
   // Set new reference angle for system to move to and optionally use PID controller to reach target
+  Serial.print("In setRef with ");Serial.print(angRef);Serial.print(" & ");Serial.println(*opAngPt);
   ref=angRef;
-  while (abs(err)>angTol){
-    pwmVal=abs(PID(Kp,Ki,Kd,ref,int(paAng)));
+  while (pidComp==0 | abs(angRef-*opAngPt)>angTol){
+    pwmVal=abs(PID(Kp,Ki,Kd,angRef,*opAngPt));
     digitalWrite(dir,dr);
     analogWrite(pwm,pwmVal);
   }
   analogWrite(pwm,0);
+  delay(100);
 }
