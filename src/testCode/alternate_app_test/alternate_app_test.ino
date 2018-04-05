@@ -15,7 +15,7 @@ volatile int drPass=0;
 volatile int sI=0;
 volatile bool dr=HIGH;
 volatile bool drP=HIGH;
-const float tol=0.2; 
+const float drTol=0.2; 
 
 volatile long int count=0;
 volatile unsigned long int lastMilli=0;
@@ -29,16 +29,18 @@ volatile float shAng=0.0;
 volatile float paAng=0.0;
 volatile float probe[2][3]={{0,0,0},{0,0,0}};                                  // Index starts at 0
 volatile float probeDiff[2]={0,0};
+volatile int scanStep=5;
 
 
-double Kp=1.0;
-double Ki=0.0;
-double Kd=0.2;
+double Kp=1.0;                                                                // 1.34
+double Ki=0.0;                                                                // 0
+double Kd=0.2;                                                                // 0.123
 volatile float errPast=0.0;
 volatile float err=0.0;
 volatile float errDer=0.0;
 volatile float errInt=0.0;
 volatile float cntr=0.0;
+volatile float angTol=0.25;
 
 int ref=0;
 int pwmVal=0;
@@ -138,47 +140,51 @@ void scan(){
   drTry=0;
   while (drPass==0){
     drTry++;
-    digitalWrite(dir,LOW);
+//    digitalWrite(dir,LOW);
     panOpP=getPanOp(pan);
-    analogWrite(pwm,100);
-    delay(500);
-    analogWrite(pwm,0);
-    Serial.print(paAng);
-    Serial.print(" ");
+    setRef(paAng-scanStep,&paAng);
+//    analogWrite(pwm,100);
+//    delay(500);
+//    analogWrite(pwm,0);
+//    Serial.print(paAng);
+//    Serial.print(" ");
 //    delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD1=panOpP-panOpC;
 //    Serial.print(delPanOpD1);
-    digitalWrite(dir,HIGH);
-    analogWrite(pwm,100);
-    delay(1000);
-    analogWrite(pwm,0);
-    Serial.print(paAng);
+    setRef(paAng+2*scanStep,&paAng);
+//    digitalWrite(dir,HIGH);
+//    analogWrite(pwm,100);
+//    delay(1000);
+//    analogWrite(pwm,0);
+//    Serial.print(paAng);
 //    delay(1000);
     panOpC=getPanOp(pan);
     delPanOpD2=panOpP-panOpC;
-    Serial.print(" ");
+//    Serial.print(" ");
 //    Serial.println(delPanOpD2);
-    digitalWrite(dir,LOW);
-    analogWrite(pwm,100);
-    delay(500);
-    analogWrite(pwm,0);
-    Serial.println(paAng);
-    if (delPanOpD1<-tol){
+    setRef(paAng-scanStep,&paAng);
+//    digitalWrite(dir,LOW);
+//    analogWrite(pwm,100);
+//    delay(500);
+//    analogWrite(pwm,0);
+//    Serial.println(paAng);
+    if (delPanOpD1<-drTol){
       dr=LOW;
       drPass=1;
       sI=1;
-    }else if (delPanOpD2<-tol){
+    }else if (delPanOpD2<-drTol){
       dr=HIGH; 
       drPass=1;
       sI=1; 
     }else {
-      drPass=0;
-      digitalWrite(dir,HIGH);                                               // Find process to randomize direction selection
-      analogWrite(pwm,100);
-      delay(1500);
-      analogWrite(pwm,0);
-      delay(100);
+      drPass=0;                                                             // Find process to randomize direction selection
+      setRef(paAng+3*scanStep,&paAng);
+//      digitalWrite(dir,HIGH);                                               
+//      analogWrite(pwm,100);
+//      delay(1500);
+//      analogWrite(pwm,0);
+//      delay(100);
     }
     if (drTry>2){
       drPass=-1;                                                            // Find optimal way to allow system to sleep if no light source present
@@ -196,6 +202,13 @@ void getRef(){
   
 }
 
-void setRef(){
+void setRef(float angRef,volatile float *opAngPt){
   // Set new reference angle for system to move to and optionally use PID controller to reach target
+  ref=angRef;
+  while (err>angTol){
+    pwmVal=abs(PID(Kp,Ki,Kd,ref,*opAngPt));
+    digitalWrite(dir,dr);
+    analogWrite(pwm,pwmVal);
+  }
+  analogWrite(pwm,0);
 }
