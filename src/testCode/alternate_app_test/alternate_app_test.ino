@@ -30,6 +30,11 @@ volatile float paAng=0.0;
 volatile float probe[2][3]={{0,0,0},{0,0,0}};                                  // Index starts at 0
 volatile float probeDiff[2]={0,0};
 volatile int scanStep=5;
+volatile int mul=0;
+
+volatile int refTry=0;
+volatile int refPass=0;
+volatile float refPast=0;
 
 
 double Kp=1.0;                                                                // 1.34
@@ -171,10 +176,12 @@ void scan(){
 //    Serial.println(paAng);
     if (delPanOpD1<-drTol){
       dr=LOW;
+      mul=-1;
       drPass=1;
       sI=1;
     }else if (delPanOpD2<-drTol){
-      dr=HIGH; 
+      dr=HIGH;
+      mul=1; 
       drPass=1;
       sI=1; 
     }else {
@@ -197,9 +204,31 @@ void scan(){
 void getRef(){
   // Gets new reference angle for system by using scanning direction and finding new maximum panel output
   // move through 5 step in direction identified
-  // find difference in past and current panel reading
-  // if difference changes to positive stop and go back one step
+  refTry=0;
+  refPass=0;
   
+  while (refPass!=1){
+    // find difference in past and current panel reading
+    for(int i=0;i<2;i++){
+      probe[0][i+1]=probe[0][i];
+      probe[1][i+1]=probe[1][i];
+    }
+    setRef(paAng+(mul*scanStep/2),&paAng);
+    probe[0][0]=getPanOp(pan);
+    probe[1][0]=paAng;
+    probeDiff[0]=probe[1]-probe[0];
+    probeDiff[1]=probe[2]-probe[1];
+    // if difference changes to positive stop and go back one step
+    if (probeDiff[0]>0 & probeDiff[1]<0){
+      refPass=1;// use sI=1
+      setRef(probe[1][1],&paAng);
+    }else if (refTry>5){
+      refPass=1;// use sI=1
+      setRef(refPast,&paAng);
+    }
+    refTry+=1;
+  }
+  refPast=paAng;
 }
 
 void setRef(float angRef,volatile float *opAngPt){
