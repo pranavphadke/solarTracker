@@ -8,7 +8,7 @@
 #define pan A1
 
 //int pan_op;
-const int CPR=64;
+const int CPR=4096;// Pololu DC Motor CPR=64
 volatile long int count=0;
 volatile long int countA=0;
 volatile long int countB=0;
@@ -65,12 +65,12 @@ void loop(){
 //  delay(100);
 //}
   
-  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
+//  digitalWrite(dir,HIGH);      // set DIR pin HIGH or LOW
 
-//  analogWrite(pwm,255);
+  analogWrite(pwm,255);
 
-  getPanOp(pan);
-  analogWrite(pwm,panRead);
+//  getPanOp(pan);
+//  analogWrite(pwm,panRead);
   
 //  getRPM();
 
@@ -82,78 +82,6 @@ void loop(){
   delay(100);
     
 }
-
-//void pulseCount(){
-////  change count (tick) when Hall sensor channel A o/p changes 
-////  increment count (tick) (clockwise rot) when channel B o/p is not similar to channel A
-////  else decrement count (tick) (anti-clockwise rot)
-////  chA=digitalRead(chanA);
-////  chB=digitalRead(chanB);
-////  if (chA!=chB){
-////    count++;
-////    dr=HIGH;
-////  }else{
-////    count--;
-////    dr=LOW;
-////  }
-//
-////  if(chA==HIGH && chB==HIGH){
-////    if(chAP==HIGH && chBP==LOW){
-////      count++;
-////      dr=HIGH;
-////    }
-////    if(chAP==LOW && chBP==HIGH){
-////      count--;
-////      dr=LOW;
-////    }
-////  }
-////  if(chA==HIGH && chB==LOW){
-////    if(chAP==HIGH && chBP==HIGH ){
-////      count--;
-////      dr=LOW;
-////    }
-////    if(chAP==LOW && chBP==LOW){
-////      count++;
-////      dr=HIGH;
-////    }
-////  }
-////  if(chA==LOW && chB==LOW){
-////    if(chAP==HIGH && chBP==LOW){
-////      count--;
-////      dr=LOW;
-////    }
-////    if(chAP==LOW && chBP==HIGH){
-////      count++;
-////      dr=HIGH;
-////    }
-////  }  
-////  if(chA==LOW && chB==HIGH){
-////    if(chAP==HIGH && chBP==HIGH){
-////      count++;
-////      dr=HIGH;
-////    }
-////    if(chAP==LOW && chBP==LOW){
-////      count--;
-////      dr=LOW;
-////    }
-////  }
-////chAP=chA;
-////chBP=chB;
-//
-//  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
-//  else count--;
-//  
-//}
-
-//void pulseCountA(){
-//  if(bitRead(PORTD,2)==bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
-//  else count--;  
-//}
-//
-//void pulseCountB(){
-//  if(bitRead(PORTD,2)!=bitRead(PORTD,3)) count++;// Read and compare digital port 2 and 3
-//  else count--;  
-//}
 
 void pulseCountA(){
   chA=digitalRead(chanA);
@@ -177,26 +105,12 @@ void getPanOp(int panPort){
   panRead*=0.04986;//(0.2493/5);        //convert from 10 bit to 8 bit, 0.2493 = 255/1023 5v/1023=0.004887
 }
 
-ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR  
-//void getRPM()
-// CPR = Counts per revolution of the motor shaft
-// updateTime = Time interval in milli seconds for calculating RPM 
-// senseActive = Number of hall sensor channels in use
-//  noInterrupts();
+ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR
   
-//  milli=millis();
-//  if(milli-lastMilli >= updateTime){
-//    lastMilli=milli;
-//    rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
-//    count=0;
-//  }
-
-  rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
+  rpm=float(14.65*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
   count=0;
   
   if(rpm<0) dr=-1; 
   else dr=1;
   rpm=abs(rpm);
-  
-//  interrupts();
 }
