@@ -63,7 +63,7 @@ void pulseCountB(){
 }
 
 ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR  
-  rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
+  rpm=float(0.7325*count);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
   count=0;
   milli=millis();
 }
@@ -73,12 +73,12 @@ void loop(){
 //  analogWrite(pwm,0);
 //  while(comm==1){
     if (milli<5000){
-      analogWrite(pwm,100);
+      analogWrite(pwm,0);
     }else if (milli>=5000 && milli<10000){
       analogWrite(pwm,255);
     }else analogWrite(pwm,0);
     
-    Serial.print(milli);Serial.print(",");Serial.println(rpm/18.75);
+    Serial.print(milli);Serial.print(",");Serial.println(rpm);
     delay(20);
 //    if(Serial.available() > 0)comm=Serial.parseInt();
 //  }  

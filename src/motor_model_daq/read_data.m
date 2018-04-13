@@ -19,7 +19,7 @@ while true
     %dataIn=fgets(ardu);
     dataOut(c,:)=fscanf(ardu,formatS,dataOutSize);
     dataOut(c,1)=dataOut(c,1)/1000;
-    if dataOut(c,2)==0 && c>20
+    if dataOut(c,2)==0 && dataOut(c,1)>10
         break;
     end
 end

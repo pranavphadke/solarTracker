@@ -3,14 +3,14 @@ clf
 close all
 clc
 
-load dataOut_motor_w_gb_v2.txt
-load motor_w_gb_v2_sim.mat
-plot(dataOut_motor_w_gb_v2(:,1),dataOut_motor_w_gb_v2(:,2))
+load dataOut.txt
+load dataOut_sim.mat
+plot(dataOut(:,1),dataOut(:,2))
 hold
 plot(simD(1,:),simD(2,:),'r')
 legend('Actual','Simulated')
 hold off
-G=tf(30.95,[1,11.9,0])
+G=tf(0.468,[0.051,1])
 % step(255*G)
 % hold off
 sisotool(G)

@@ -9,7 +9,7 @@
 
 //int pan_op;
 
-const int CPR=64;
+const int CPR=4096;// Pololu CPR=64;
 volatile long int count=0;
 volatile unsigned long int lastMilli=0;
 volatile unsigned long int milli=0;
@@ -21,10 +21,11 @@ volatile float panRead=0.0;
 volatile float moAng=0.0;
 volatile float shAng=0.0;
 
-double Kp=1.0;
-double Ki=0.0;
-double Kd=0.2;
+double Kp=6.713;
+double Ki=564.793;
+double Kd=100;
 volatile float errPast=0.0;
+volatile float parPast=0.0;
 volatile float err=0.0;
 volatile float errDer=0.0;
 volatile float errInt=0.0;
@@ -74,12 +75,12 @@ void loop(){
   if (time>=0 && time<250){
     ref=0;
   }else if (time>=250 && time<500){
-    ref=90;
+    ref=45;
   }else if (time>=500 && time<750){ 
-    ref=-90;
+    ref=-45;
   }else time=0;
   
-  pwmVal=abs(PID(Kp,Ki,Kd,ref,shAng));//1.34,0,0.123
+  pwmVal=abs(PID(Kp,Ki,Kd,ref,rpm));//1.34,0,0.123
   digitalWrite(dir,dr);
   analogWrite(pwm,pwmVal);
   time++;
@@ -117,9 +118,9 @@ void getPanOp(int panPort){
 
 ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR
 //  noInterrupts();
-  rpm=float(937.5*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
-  moAng+=(5.625*count);
-  shAng+=(0.3*count);
+  rpm=float(14.648*count/updateTime);//float((60000*count)/(CPR*updateTime));//(count/64)/(0.4/60) for both channels?32 CPR per channel
+//  moAng+=(5.625*count);
+//  shAng+=(0.3*count);
 //  interrupts();  
   count=0;
 //  if(rpm<0) dr=-1; 
@@ -130,13 +131,16 @@ ISR(TIMER1_COMPA_vect){ // TIMER 1 COMPARE A ISR
 
 float PID(double P,double I,double D, int refer, int actual){
   err=refer-actual;
-  errDer=err-errPast;
+//  errDer=err-errPast;
+  errDer=parPast-actual;
   errInt+=err;
   errInt=constrain(errInt,-180,180);
+//  cntr=constrain(((P*err)+(I*errInt)+(D*errDer)),-255,255);
   cntr=constrain(((P*err)+(I*errInt)+(D*errDer)),-255,255);
   if(cntr<0) dr=LOW; 
   else dr=HIGH;  
   errPast=err;
+  parPast=actual;
   return int(cntr);
 }
 
